@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랜덤 데이트 코스 추천기</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #f7f9fc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 1100px;
+            padding: 30px 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff6b81;
+            margin-bottom: 25px;
+            font-size: 26px;
+        }
+
+        .section-wrapper {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .section {
+            flex: 1;
+            min-width: 260px;
+            background-color: #fff5f6;
+            border: 1px solid #ffe1e6;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 12px;
+        }
+
+        .radio-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            height: 21px;
+        }
+
+        .radio-group label {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .result-box {
+            font-size: 17px;
+            font-weight: bold;
+            color: #222;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            padding: 12px;
+            border: 1px dashed #ffb8c6;
+            word-break: keep-all;
+            line-height: 1.4;
+        }
+
+        button {
+            width: 100%;
+            background-color: #ff6b81;
+            color: white;
+            border: none;
+            padding: 12px 0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #ff4757;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .all-button {
+            margin-top: 20px;
+            background-color: #2ed573;
+        }
+
+        .all-button:hover {
+            background-color: #26af5f;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>💕 랜덤 데이트 코스 추천기 💕</h1>
+
+    <div class="section-wrapper">
+        <!-- 1. 위치 추천 섹션 -->
+        <div class="section">
+            <div>
+                <div class="section-title">📍 장소 정하기</div>
+                <div class="radio-group">
+                    <label><input type="radio" name="locationType" value="nation" checked> 전국</label>
+                    <label><input type="radio" name="locationType" value="seoul"> 서울</label>
+                </div>
+                <div class="result-box" id="locationResult">어디로 갈까?</div>
+            </div>
+            <button onclick="pickLocation()">장소 뽑기!</button>
+        </div>
+
+        <!-- 2. 데이트 활동 추천 섹션 -->
+        <div class="section">
+            <div>
+                <div class="section-title">🎬 활동 정하기</div>
+                <div class="radio-group"></div>
+                <div class="result-box" id="activityResult">무엇을 할까?</div>
+            </div>
+            <button onclick="pickActivity()">활동 뽑기!</button>
+        </div>
+
+        <!-- 3. 메뉴 정하기 섹션 -->
+        <div class="section">
+            <div>
+                <div class="section-title">🍽️ 메뉴 정하기</div>
+                <div class="radio-group"></div>
+                <div class="result-box" id="foodResult">뭐 먹을까?</div>
+            </div>
+            <button onclick="pickFood()">메뉴 뽑기!</button>
+        </div>
+    </div>
+
+    <!-- 전체 한번에 뽑기 버튼 -->
+    <button class="all-button" onclick="pickAll()">✨ 전체 코스 한 번에 뽑기!</button>
+</div>
+
+<script>
+    // 전국 주요 지역 (40개)
+    const nationList = [
+        "강릉 (경포대/안목해변)", "속초 (아바이마을)", "부산 (해운대/광안리)", "부산 (영도/남포동)",
+        "제주 (애월/협재)", "제주 (서귀포/중문)", "경주 (황리단길)", "전주 (한옥마을)", 
+        "여수 (돌산/밤바다)", "춘천 (남이섬)", "가평 (청평/쁘띠프랑스)", "인천 (송도국제도시)", 
+        "인천 (월미도/개항장)", "수원 (행궁동/화성)", "대전 (소제동/엑스포)", "대구 (동성로/김광석길)", 
+        "포항 (영일대/호미곶)", "통영 (동피랑/루지)", "여주 (아울렛/신륵사)", "파주 (헤이리마을)", 
+        "양평 (두물머리)", "안목 (커피거리)", "순천 (만습지)", "단양 (패러글라이딩/도담삼봉)", 
+        "삼척 (장호항)", "울산 (태화강 십리대숲)", "남해 (독일마을)", "군산 (근대화거리)", 
+        "안동 (하회마을)", "보성 (녹차밭)", "목포 (해상케이블카)", "거제도 (바람의언덕)", 
+        "청주 (수암골)", "천안 (각원사/태조산)", "원주 (소금산 출렁다리)", "공주 (한옥마을)", 
+        "태안 (꽃지해수욕장)", "부안 (채석강)", "창원 (진해탑/해양공원)", "제천 (청풍호)"
+    ];
+
+    // 서울 주요 지역 (35개)
+    const seoulList = [
+        "홍대 / 합정 / 상수", "성수 / 서울숲", "강남 / 신사 (가로수길)", "익선동 / 종로3가", 
+        "혜화 (대학로)", "이태원 / 한남동", "잠실 / 송리단길", "여의도 (더현대/한강공원)", 
+        "북촌 / 서촌 / 삼청동", "연남동 / 연남철길", "용산 / 용리단길", "문래동 문래창작촌", 
+        "압구정 로데오 / 도산공원", "을지로 (힙지로)", "망원동 (망리단길)", "샤로수길 (낙성대/서울대입구)", 
+        "경리단길 / 해방촌", "노량진 (수산시장/육교)", "동대문 (DDP/창신동)", "성북동 (수연산방/성북천)", 
+        "광화문 / 청계천", "상암 (DMC/노을공원)", "왕십리 / 한양대", "건대입구 / 자양동", 
+        "사당 / 이수", "신촌 / 이대", "서울역 / 후암동", "천호 / 로데오거리", 
+        "노원 / 공릉 (공리단길)", "목동 / 오목교", "양재 (천변/시민의숲)", "서초 / 예술의전당", 
+        "청담동 럭셔리 스트리트", "중랑천 뚝방길 / 태릉", "여의도 밤도깨비 야시장 부근"
+    ];
+
+    // 데이트 활동 (45개)
+    const activityList = [
+        "영화관에서 최신 영화 & 팝콘", "인생샷 찍을 수 있는 핫플 카페 투어", "보드게임 카페에서 내기 대결",
+        "한강/공원에서 돗자리 깔고 피크닉", "미술관 / 박물관 전시 관람", "커플 반지 / 향수 / 도자기 공방 체험",
+        "실내 클라이밍 또는 볼링 한 판", "방탈출 카페 미션 도전", "만화카페에서 뒹굴거리며 라면 먹기",
+        "야경 명소 드라이브 & 산책", "원데이 클래스 (가죽공예, 쿠킹 등)", "독립서점 탐방 및 서로 책 선물하기",
+        "레트로 오락실 / 인형뽑기 투어", "아쿠아리움 방문 및 해양생물 관람", "놀이공원 (롯데월드/에버랜드)",
+        "아울렛 또는 백화점 쇼핑", "실내 실탄/레이저 사격장 대결", "아이스링크 / 롤러스케이트 타기",
+        "LP바 / 라이브 재즈바에서 음악 감상", "족욕 / 마사지 카페에서 힐링", "식물원 / 수목원 산책",
+        "포토부스 네컷사진 투어", "플리마켓 구경 및 아기자기 소품 쇼핑", "VR 체험존 방문",
+        "유람선 / 오리배 타기", "수제 맥주 브루어리 투어", "스포츠 경기 (야구/축구/농구) 직관",
+        "캠핑 / 글램핑 가기", "와인바에서 한잔하며 도란도란 대화", "고궁 한복 대여 산책",
+        "야시장 먹거리 투어", "카트 라이딩 / 루지 체험", "짚라인 / 액티비티 도전",
+        "템플스테이 / 힐링 체험", "동물원 / 펫 카페 방문", "보트 / 카약 체험",
+        "천문대에서 별자리 관측", "수상스키 / 수상레저 체험", "전통시장 맛집 스탬프 투어",
+        "실내 골프 / 스크린 골프", "탁구 / 당구 한판 대결", "코인노래방 열창하기",
+        "온천 / 스파에서 힐링", "피트니스 클래스 / 요가 청강", "길거리 버스킹 관람"
+    ];
+
+    // 메뉴 및 맛집 추천 (50개)
+    const foodList = [
+        "파스타 & 화덕피자", "숙성 소고기 & 와인", "삼겹살 & 목살 구이", "초밥 & 사시미 세트",
+        "수제버거 & 감자튀김", "마라탕 & 꿔바로우", "떡볶이 & 모듬튀김 & 순대", "쌀국수 & 분짜",
+        "곱창 / 대창 / 막창 구이", "샤브샤브 & 스키야키", "타코 & 퀘사디아 (멕시칸)", "철판 닭갈비 & 볶음밥",
+        "돈까스 / 라멘 / 우동", "양꼬치 & 지삼선", "찜닭 & 당면사리", "해물찜 & 볶음밥",
+        "조개구이 & 해물라면", "간장게장 & 양념게장", "인도 커리 & 난", "감자탕 & 뼈찜",
+        "족발 & 보쌈", "평양냉면 & 수육", "함박스테이크 & 옴라이스", "아구찜 & 볶음밥",
+        "부대찌개 & 라면사리", "돼지국밥 / 순대국밥", "낙곱새 (낙지+곱창+새우)", "편백찜 & 세이로무시",
+        "딤섬 & 소롱포", "훠궈 (중식 샤브샤브)", "해물파전 & 막걸리", "지중해식 샐러드 & 샌드위치",
+        "우대갈비 / 토마호크", "스페인 파에야 & 감바스", "동남아 팟타이 & 나시고랭", "장어구이 & 덮밥",
+        "케밥 & 샤슬릭", "칼국수 & 보리밥", "아사이볼 & 브런치 팬케이크", "추어탕 & 돌솥밥",
+        "고기국수 & 돔베고기", "알탕 & 알곤이찜", "생선구이 정식", "청국장 & 비빔밥",
+        "오코노미야키 & 야키소바", "치킨 & 시원한 생맥주", "숯불 돼지갈비", "텐동 (튀김덮밥)",
+        "뷔페 / 호텔 뷔페", "양갈비 / 숄더랙"
+    ];
+
+    // 이전 추천 결과를 기록해 중복을 방지하는 변수
+    let lastLocation = "";
+    let lastActivity = "";
+    let lastFood = "";
+
+    // 중복 방지 랜덤 추출 함수
+    function getUniqueRandom(array, lastItem) {
+        if (array.length <= 1) return array[0];
+        let newItem;
+        do {
+            newItem = array[Math.floor(Math.random() * array.length)];
+        } while (newItem === lastItem);
+        return newItem;
+    }
+
+    // 장소 추천
+    function pickLocation() {
+        const locationType = document.querySelector('input[name="locationType"]:checked').value;
+        const resultDisplay = document.getElementById('locationResult');
+        const sourceList = (locationType === 'nation') ? nationList : seoulList;
+
+        const picked = getUniqueRandom(sourceList, lastLocation);
+        lastLocation = picked;
+        resultDisplay.textContent = picked;
+    }
+
+    // 활동 추천
+    function pickActivity() {
+        const resultDisplay = document.getElementById('activityResult');
+        const picked = getUniqueRandom(activityList, lastActivity);
+        lastActivity = picked;
+        resultDisplay.textContent = picked;
+    }
+
+    // 메뉴 추천
+    function pickFood() {
+        const resultDisplay = document.getElementById('foodResult');
+        const picked = getUniqueRandom(foodList, lastFood);
+        lastFood = picked;
+        resultDisplay.textContent = picked;
+    }
+
+    // 전체 한번에 뽑기
+    function pickAll() {
+        pickLocation();
+        pickActivity();
+        pickFood();
+    }
+</script>
+
+</body>
+</html>
